@@ -1,6 +1,9 @@
 import cv2
-import tools.camera as cam
-import tools.drawable as draw
+import engine.camera as cam
+
+from tools.finger_detection.finger_detection import Predictor
+import tools.DB as db
+from engine.engine import Engine
 # initialize the list of reference points and boolean indicating
 # whether cropping is being performed or not
 refPt = []
@@ -13,18 +16,28 @@ def click_and_crop(event, x, y, flags, param):
 
 
 camera = cam.Camera()
-
+predictor = Predictor()
+game_engine = Engine()
 while camera.capture.isOpened():
-    ret, frame, frame_resized = camera.get_frame()
+    ret, frame = camera.get_frame()
     if ret:
+        prediction = predictor.predict_draw(frame)
+        frame = cv2.resize(frame, (db.CAMERA_WIDTH, db.CAMERA_HEIGHT), interpolation=cv2.INTER_AREA)
 
-        canvas = draw.get_canvas()
-        draw.draw_backgorund(canvas)
-        draw.draw_camera(canvas,frame_resized)
-        cv2.imshow("Camera", frame)
-        cv2.imshow("Canvas", canvas)
+
+        canvas = game_engine.get_canvas()
+        game_engine.draw_backgorund(canvas)
+        game_engine.draw_camera(canvas,frame)
+
+        game_engine.draw_board(canvas)
+
+        game_engine.update_barrels(prediction)
+        game_engine.draw_hands(canvas)
+
+
+        cv2.imshow(db.WINDOW_TITLE, canvas)
         k = cv2.waitKey(1)
-        if k == 27:  # press ESC to exit
+        if k == 27 or cv2.getWindowProperty(db.WINDOW_TITLE, 0) < 0:  # press ESC to exit
             camera.release()
             cv2.destroyAllWindows()
             break
