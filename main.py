@@ -1,23 +1,25 @@
 import cv2
 import engine.camera as cam
-
+import random
 from tools.finger_detection.finger_detection import Predictor
 import tools.DB as db
+import time
 from engine.engine import Engine
 # initialize the list of reference points and boolean indicating
 # whether cropping is being performed or not
 refPt = []
 
 
-def click_and_crop(event, x, y, flags, param):
-    global refPt
-    if event == cv2.EVENT_LBUTTONDOWN:
-        refPt = [(x, y)]
+
 
 
 camera = cam.Camera()
 predictor = Predictor()
 game_engine = Engine()
+random.seed(int(time.time()))
+if random.randint(0,1)  == 1:
+    game_engine.make_ai_random_move()
+
 while camera.capture.isOpened():
     ret, frame = camera.get_frame()
     if ret:
@@ -31,9 +33,11 @@ while camera.capture.isOpened():
 
         game_engine.draw_board(canvas)
 
+
         game_engine.update_barrels(prediction)
         game_engine.draw_hands(canvas)
 
+        game_engine.update_moves()
 
         cv2.imshow(db.WINDOW_TITLE, canvas)
         k = cv2.waitKey(1)
