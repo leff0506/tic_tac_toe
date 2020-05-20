@@ -19,6 +19,7 @@ game_engine = Engine()
 random.seed(int(time.time()))
 if random.randint(0,1)  == 1:
     game_engine.make_ai_random_move()
+    game_engine.set_reverse_drawing()
 
 while camera.capture.isOpened():
     ret, frame = camera.get_frame()

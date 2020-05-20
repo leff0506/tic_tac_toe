@@ -19,6 +19,9 @@ class Engine:
         self.current_step_row_col = 0
         self.wait = 0
         self.alive = True
+        self.ai_moving = False
+        self.ai_moving_barrel = 0
+        self.reverse_drawing = False
         file_names = ["1.png", "2.png", "3.png", "5.png"]
         for file in file_names:
             image = cv2.imread("./images/hands/" + file, cv2.IMREAD_UNCHANGED)
@@ -33,6 +36,8 @@ class Engine:
 
             self.bg_hand_images.append(blank_image)
         self.ai = AI()
+    def set_reverse_drawing(self):
+        self.reverse_drawing= True
 
     def get_canvas(self):
         canvas = np.zeros([db.WINDOW_HEIGHT, db.WINDOW_WIDTH, 4], dtype=np.uint8)
@@ -88,22 +93,43 @@ class Engine:
 
         for i in range(3):
             for j in range(3):
-                if self.board[i][j] == 1:
-                    cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 50, db.PLAYER_COLORS[0], 10)
-                    # cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 45, (0, 0, 0), -1)
-                elif self.board[i][j] == 2:
-                    length = 130
-                    width = 10
-                    center = (10 + j * 160 + 75, 10 + i * 160 + 75)
-                    upper_left = [center[0] - width / 2, center[1] - length / 2]
-                    upper_right = [center[0] + width / 2, center[1] - length / 2]
-                    bottom_right = [center[0] + width / 2, center[1] + length / 2]
-                    bottom_left = [center[0] - width / 2, center[1] + length / 2]
+                if self.reverse_drawing:
+                    if self.board[i][j] == 1:
+                        cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 50, db.PLAYER_COLORS[0], 10)
+                        # cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 45, (0, 0, 0), -1)
+                    elif self.board[i][j] == 2:
+                        length = 130
+                        width = 10
+                        center = (10 + j * 160 + 75, 10 + i * 160 + 75)
+                        upper_left = [center[0] - width / 2, center[1] - length / 2]
+                        upper_right = [center[0] + width / 2, center[1] - length / 2]
+                        bottom_right = [center[0] + width / 2, center[1] + length / 2]
+                        bottom_left = [center[0] - width / 2, center[1] + length / 2]
 
-                    left_rectangle = self.__rotate_rectangle([upper_left, upper_right, bottom_right, bottom_left], -45)
-                    right_rectangle = self.__rotate_rectangle([upper_left, upper_right, bottom_right, bottom_left], 45)
-                    points = np.array([left_rectangle, right_rectangle], dtype=np.int32)
-                    cv2.fillPoly(canvas, points, db.PLAYER_COLORS[1])
+                        left_rectangle = self.__rotate_rectangle([upper_left, upper_right, bottom_right, bottom_left], -45)
+                        right_rectangle = self.__rotate_rectangle([upper_left, upper_right, bottom_right, bottom_left], 45)
+                        points = np.array([left_rectangle, right_rectangle], dtype=np.int32)
+                        cv2.fillPoly(canvas, points, db.PLAYER_COLORS[1])
+                else:
+                    if self.board[i][j] == 1:
+                        length = 130
+                        width = 10
+                        center = (10 + j * 160 + 75, 10 + i * 160 + 75)
+                        upper_left = [center[0] - width / 2, center[1] - length / 2]
+                        upper_right = [center[0] + width / 2, center[1] - length / 2]
+                        bottom_right = [center[0] + width / 2, center[1] + length / 2]
+                        bottom_left = [center[0] - width / 2, center[1] + length / 2]
+
+                        left_rectangle = self.__rotate_rectangle([upper_left, upper_right, bottom_right, bottom_left],
+                                                                 -45)
+                        right_rectangle = self.__rotate_rectangle([upper_left, upper_right, bottom_right, bottom_left],
+                                                                  45)
+                        points = np.array([left_rectangle, right_rectangle], dtype=np.int32)
+                        cv2.fillPoly(canvas, points, db.PLAYER_COLORS[1])
+
+                    elif self.board[i][j] == 2:
+                        cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 50, db.PLAYER_COLORS[0], 10)
+                        # cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 45, (0, 0, 0), -1)
 
     def __draw_foreground_hands(self, canvas):
         start = copy.copy(db.START_POINT_FOR_HANDS)
@@ -152,13 +178,25 @@ class Engine:
                         fontScale, color, thickness, cv2.LINE_AA)
             cv2.putText(canvas, ">column: {}".format(self.fixed_col), (col_point[0] - 24, col_point[1]), font,
                         fontScale, color, thickness, cv2.LINE_AA)
+    def __update_ai_moving(self,delta):
+        delta/=db.AI_MOVES_SECONDS
+        self.ai_moving_barrel += delta
+        if self.ai_moving_barrel >=1:
+            self.ai_moving_barrel = 0
+            self.ai_moving = False
+            self.make_ai_move()
+
 
     def update_barrels(self, classes):
         cur_time = time.time()
         add = (cur_time - self.last_time) / db.SECONDS_TO_FIX
         self.wait -= (cur_time - self.last_time)
+        copy_delta = (cur_time - self.last_time)
         self.last_time = cur_time
-        if not self.alive:
+        if not self.alive :
+            return
+        if self.ai_moving:
+            self.__update_ai_moving(copy_delta)
             return
         if self.wait <= 0:
             self.wait = 0
@@ -237,8 +275,13 @@ class Engine:
             return -1
         return 0
     def update_moves(self):
-        if not self.alive:
+        if not self.alive or self.ai_moving:
             return
+        if self.__win() != 0:
+            self.alive = False
+            ### here smth that win
+            return
+
         for i in range(3):
             if self.class_barrels[i] == 1:
                 for j in range(4):
@@ -270,8 +313,5 @@ class Engine:
                 return
             self.fixed_raw = 0
             self.fixed_col = 0
-            self.make_ai_move()
-            if self.__win()!=0:
-                self.alive = False
-                ### here smth that win
-                return
+            self.ai_moving=True
+
