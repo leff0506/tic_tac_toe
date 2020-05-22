@@ -1,5 +1,5 @@
 ## Tic tac toe
-This game is based on gesture recognition. Any interaction with the game occurs using a hand gesture. To understand how to play the game, please watch the video instructions/video_instruction.mp4<br/>All my research steps are described below
+This PC Windows 10 game is based on gesture recognition. Any interaction with the game occurs using a hand gesture. To understand how to play the game, please watch the video instructions/video_instruction.mp4<br/>All my research steps are described below
 
 ## How to run.
 <ol>
