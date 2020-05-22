@@ -19,7 +19,7 @@ This game is based on gesture recognition. Any interaction with the game occurs 
 </ul>
 
 ## Research
-The task is divided into two stage.
+The task is divided into two stages.
 <ul>
   <li>Gesture detection.</li>
   <li>Game engine.</li>
@@ -33,4 +33,4 @@ After several days of googling I found two solutions.
 First algorithm doesn`t work well because if in the background is color that looks like skin it will be also selected. <br/>
 Second algorithm doesn`t work well because if the background changes it will destroy the full algorithm.<br/>
 This led me to think about using neural networks.<br/>
-First my try was to make my own CNN using dataset from <a href ="https://www.kaggle.com/koryakinp/fingers">kaggle</a>.
+First my try was to make my own CNN using dataset from <a href ="https://www.kaggle.com/koryakinp/fingers">kaggle</a>. But it did not bring the expected results due to the ease of my CNN architecture.<br/>So I started to find the suitable architecture. I found the YOLO (version 3) detector. However, even after I found a good architecture, the result was still unsatisfactory. I found out that the problem was in dataset, it was not as extensive as needed and every image was black and white with black background, so it did not work well in real verification.
