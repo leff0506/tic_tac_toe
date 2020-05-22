@@ -13,7 +13,7 @@ This game is based on gesture recognition. Any interaction with the game occurs 
   <li>run <code>python main.py</code></li>
 </ol>
 
-## Hardware requirements:
+## Hardware requirements
 <ul>
   <li><a href = "https://en.wikipedia.org/wiki/CUDA">GPU that supports CUDA 10.</a></li>
 </ul>
