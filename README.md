@@ -20,16 +20,16 @@ This game is based on gesture recognition. Any interaction with the game occurs 
 
 ## Research
 The task is divided into two stages.
-<ul>
+<ol>
   <li>Gesture detection.</li>
   <li>Game engine.</li>
-</ul>
+</ol>
 Second step is casual so only first stage deserves our attention.
 After several days of googling I found two solutions.
-<ul>
+oul>
   <li>Algorithm based on skin selection by hsv range of skin color. After selection we can find contours. Based on the contours, you can say how many fingers a person shows.</li>
   <li>This algorithm differs from the previous one in that the hand selection is not based on color but on the background selection.</li>
-</ul>
+</ol>
 First algorithm doesn`t work well because if in the background is color that looks like skin it will be also selected. <br/>
 Second algorithm doesn`t work well because if the background changes it will destroy the full algorithm.<br/>
 This led me to think about using neural networks.<br/>
