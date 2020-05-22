@@ -1,7 +1,7 @@
 <h1>Tic tac toe</h1><br/>
 This game is based on gesture recognition. Any interaction with the game occurs using a hand gesture. For instruction how to play the game, please watch the video instructions/video_instruction.mp4
 
-<b>How to run.</b></br/>
+<b>How to run.</b><br/>
 <ol>
   <li><a href = "https://www.anaconda.com/products/individual">download the Anaconda</a></li>
   <li>run <code>cmd</code> and create new environment <code>conda create --name tic_tac_toe</code></li>
@@ -15,5 +15,5 @@ This game is based on gesture recognition. Any interaction with the game occurs 
 <br/>
 <b>Hardware requirements:</b>
 <ul>
-  <li><a href = "https://en.wikipedia.org/wiki/CUDA">GPU that supports CUDA 10.</a><li>
+  <li><a href = "https://en.wikipedia.org/wiki/CUDA">GPU that supports CUDA 10.</a></li>
 </ul>
