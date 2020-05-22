@@ -1,3 +1,4 @@
+# script for creation ai for tic_tac_toe
 import  json
 board = [[1,1,0],[1,2,0],[0,2,2]]
 def convert_board_to_str(board,player_id):

@@ -15,7 +15,7 @@ class Engine:
         self.hand_images = []
         self.bg_hand_images = []
         self.last_time = time.time()
-        self.fixed_raw = 0
+        self.fixed_row = 0
         self.fixed_col = 0
         self.current_step_row_col = 0
         self.wait = 0
@@ -34,12 +34,12 @@ class Engine:
         for i in range(4):
             blank_image = np.zeros((db.HAND_IMAGE_HEIGHT, db.HAND_IMAGE_WIDTH, 4), np.uint8)
             color = (255, 255, 255)
-            # color = db.BOUND_RECT_COLORS[i]
             blank_image[:, :] = (color[0], color[1], color[2], 255)
 
             self.bg_hand_images.append(blank_image)
         self.ai = AI()
 
+    # if ai moves first just change draw option to keep drawing a cross for first player
     def set_reverse_drawing(self):
         self.reverse_drawing = True
         self.last_first_move = 2
@@ -50,6 +50,7 @@ class Engine:
         canvas[:, :] = (color[0], color[1], color[2], 255)
         return canvas
 
+    # draw all lines in background
     def draw_backgorund(self, canvas):
         background_color = db.GRID_COLOR
         cv2.rectangle(canvas, (0, 0), (10, 490), background_color, -1)
@@ -64,10 +65,11 @@ class Engine:
 
         cv2.rectangle(canvas, (490, 80), (1090, 90), background_color, -1)
 
+    # draw camera
     def draw_camera(self, canvas, frame):
         canvas[db.WINDOW_HEIGHT - db.CAMERA_HEIGHT:, db.WINDOW_WIDTH - db.CAMERA_WIDTH:, :] = cv2.cvtColor(frame,
                                                                                                            cv2.COLOR_BGR2BGRA)
-
+    # rotate point around center by angle
     def __rotate_point(self, point, center, angle):
         vector = [0, 0]
         vector[0] = point[0] - center[0]
@@ -83,6 +85,7 @@ class Engine:
 
         return result_point
 
+    # rotate rectangle by angle
     def __rotate_rectangle(self, rectangle, angle):
         angle_radians = angle * math.pi / 180
         center = [0, 0]
@@ -94,15 +97,14 @@ class Engine:
             result_rectangle.append(point)
         return result_rectangle
 
+    # draw all crosses and zeros and win line (if needed)
     def draw_board(self, canvas):
 
         for i in range(3):
-
             for j in range(3):
                 if self.reverse_drawing:
                     if self.board[i][j] == 1:
                         cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 50, db.PLAYER_COLORS[0], 10)
-                        # cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 45, (0, 0, 0), -1)
                     elif self.board[i][j] == 2:
                         length = 130
                         width = 10
@@ -137,10 +139,11 @@ class Engine:
 
                     elif self.board[i][j] == 2:
                         cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 50, db.PLAYER_COLORS[0], 10)
-                        # cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 45, (0, 0, 0), -1)
+
         if self.draw_winner:
             self.__draw_winner_line(canvas)
 
+    # draw line for winner
     def __draw_winner_line(self, canvas):
         line_width = 10
         for i in range(3):
@@ -178,6 +181,7 @@ class Engine:
             cv2.line(canvas, (450, 40), (40, 450), db.WINNER_LINE_COLOR, line_width)
             return
 
+    # draw hands with filled part of confidence
     def __draw_foreground_hands(self, canvas):
         start = copy.copy(db.START_POINT_FOR_HANDS)
         for i in range(4):
@@ -193,6 +197,7 @@ class Engine:
 
             start[0] += db.HAND_IMAGE_WIDTH + db.HAND_IMAGE_MARGIN_RIGHT
 
+    # create background of hands (rectangles-confidence that further will be masked)
     def __create_background_hands(self):
         for i in range(4):
             image = np.zeros((db.HAND_IMAGE_HEIGHT, db.HAND_IMAGE_WIDTH, 4), np.uint8)
@@ -203,29 +208,26 @@ class Engine:
                           db.BOUND_RECT_COLORS[i], -1)
             self.bg_hand_images[i] = image
 
-    def __draw_fixed_raw_col(self, canvas):
+    # draw row column state
+    def __draw_fixed_row_col(self, canvas):
         font = cv2.FONT_HERSHEY_SIMPLEX
-        raw_point = (db.WINDOW_WIDTH - 141, 30)
+        row_point = (db.WINDOW_WIDTH - 141, 30)
         col_point = (db.WINDOW_WIDTH - 200, 60)
         fontScale = 1
-
-        # Blue color in BGR
         color = db.BOUND_RECT_COLOR
-
-        # Line thickness of 2 px
         thickness = 2
         if self.current_step_row_col == 0:
-
-            cv2.putText(canvas, ">row: {}".format(self.fixed_raw), (raw_point[0] - 24, raw_point[1]), font,
+            cv2.putText(canvas, ">row: {}".format(self.fixed_row), (row_point[0] - 24, row_point[1]), font,
                         fontScale, color, thickness, cv2.LINE_AA)
             cv2.putText(canvas, "column: {}".format(self.fixed_col), col_point, font,
                         fontScale, color, thickness, cv2.LINE_AA)
         elif self.current_step_row_col == 1:
-            cv2.putText(canvas, "row: {}".format(self.fixed_raw), raw_point, font,
+            cv2.putText(canvas, "row: {}".format(self.fixed_row), row_point, font,
                         fontScale, color, thickness, cv2.LINE_AA)
             cv2.putText(canvas, ">column: {}".format(self.fixed_col), (col_point[0] - 24, col_point[1]), font,
                         fontScale, color, thickness, cv2.LINE_AA)
 
+    # update ai barrel
     def __update_ai_moving(self, delta):
         delta /= db.AI_MOVES_SECONDS
         self.ai_moving_barrel += delta
@@ -234,6 +236,7 @@ class Engine:
             self.ai_moving = False
             self.make_ai_move()
 
+    # update gesture barrels
     def update_barrels(self, classes):
         cur_time = time.time()
         add = (cur_time - self.last_time) / db.SECONDS_TO_FIX
@@ -264,10 +267,10 @@ class Engine:
     def draw_hands(self, canvas):
         self.__create_background_hands()
         self.__draw_foreground_hands(canvas)
-        self.__draw_fixed_raw_col(canvas)
+        self.__draw_fixed_row_col(canvas)
 
-    def __make_player_move(self, raw, col):
-        self.board[raw - 1][col - 1] = 1
+    def __make_player_move(self, row, col):
+        self.board[row - 1][col - 1] = 1
 
     def make_ai_move(self):
         move = self.ai.get_move(self.board, 2)
@@ -276,6 +279,7 @@ class Engine:
     def make_ai_random_move(self):
         self.board[random.randint(0, 2)][random.randint(0, 2)] = 2
 
+    # return if player_id won
     def __win_player(self, player):
         # hor
         for i in range(3):
@@ -295,7 +299,6 @@ class Engine:
             if done:
                 return True
 
-        # main diag
         done = True
         for i in range(3):
             if self.board[i][i] != player:
@@ -319,6 +322,7 @@ class Engine:
                     result += 1
         return result == 9
 
+    # check for win return 1 if first player win. 2 if second player win. -1 if it is a draw
     def __win(self):
         if self.__win_player(1):
             return 1
@@ -328,27 +332,30 @@ class Engine:
             return -1
         return 0
 
+    # after any barrel is fool it can update moves
     def update_moves(self):
         if self.ai_moving:
             return
         if self.__win() != 0:
             self.alive = False
             self.draw_winner = True
-            ### here smth that win
 
+        # update 1 2 3 gestures
         if self.alive == True:
             for i in range(3):
                 if self.class_barrels[i] == 1:
                     for j in range(4):
                         self.class_barrels[j] = 0
                     if self.current_step_row_col == 0:
-                        self.fixed_raw = i + 1
+                        self.fixed_row = i + 1
                         self.current_step_row_col = 1
                     elif self.current_step_row_col == 1:
                         self.fixed_col = i + 1
                         self.current_step_row_col = 0
                     self.wait = db.SECONDS_WAIT_AFTER_FIX
                     return
+
+        # update 5 gesture
         if self.class_barrels[3] == 1:
             for j in range(4):
                 self.class_barrels[j] = 0
@@ -368,20 +375,18 @@ class Engine:
                 self.wait = 1
                 return
             self.wait = db.SECONDS_WAIT_AFTER_FIX
-            # here some checks
-            # equals 0
-            if self.fixed_raw * self.fixed_col == 0:
+
+            if self.fixed_row * self.fixed_col == 0:
                 return
-            # empty or full
-            if self.board[self.fixed_raw - 1][self.fixed_col - 1] != 0:
+            if self.board[self.fixed_row - 1][self.fixed_col - 1] != 0:
                 return
 
-            self.__make_player_move(self.fixed_raw, self.fixed_col)
+            self.__make_player_move(self.fixed_row, self.fixed_col)
             if self.__win() != 0:
                 self.alive = False
                 self.draw_winner = True
                 self.wait = 1
                 return
-            self.fixed_raw = 0
+            self.fixed_row = 0
             self.fixed_col = 0
             self.ai_moving = True
