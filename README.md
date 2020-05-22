@@ -1,5 +1,5 @@
 <h1>Tic tac toe</h1><br/>
-This game is based on gesture recognition. Any interaction with the game occurs using a hand gesture. For instruction how to play the game, please watch the video instructions/video_instruction.mp4
+This game is based on gesture recognition. Any interaction with the game occurs using a hand gesture. To understand how to play the game, please watch the video instructions/video_instruction.mp4
 
 <b>How to run.</b><br/>
 <ol>
