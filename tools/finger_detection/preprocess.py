@@ -1,15 +1,9 @@
 from __future__ import division
 
-import torch 
-import torch.nn as nn
-import torch.nn.functional as F 
-from torch.autograd import Variable
+import torch
 import numpy as np
-import cv2 
-import matplotlib.pyplot as plt
-from tools.finger_detection.util import count_parameters as count
-from tools.finger_detection.util import convert2cpu as cpu
-from PIL import Image, ImageDraw
+import cv2
+from PIL import Image
 
 
 def letterbox_image(img, inp_dim):

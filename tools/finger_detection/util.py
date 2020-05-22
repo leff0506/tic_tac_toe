@@ -3,11 +3,9 @@ from __future__ import division
 
 import torch 
 import torch.nn as nn
-import torch.nn.functional as F 
 from torch.autograd import Variable
 import numpy as np
-import cv2 
-import matplotlib.pyplot as plt
+import cv2
 from tools.finger_detection.bbox import bbox_iou
 
 def count_parameters(model):

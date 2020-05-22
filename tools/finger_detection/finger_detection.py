@@ -98,37 +98,5 @@ class Predictor:
 
         return []
 
-# if __name__ == '__main__':
-#
-#     cap = cv2.VideoCapture(0)
-#     assert cap.isOpened(), 'Cannot capture source'
-#
-#     frames = 0
-#
-#     predictor = Predictor()
-#     start = time.time()
-#     while cap.isOpened():
-#
-#         ret, frame = cap.read()
-#
-#         if not ret:
-#             exit(0)
-#         frame = cv2.flip(frame, 1)
-#         predicted = predictor.predict_draw(frame)
-#         # print(predicted)
-#         cv2.imshow("frame", frame)
-#
-#
-#
-#         frames += 1
-#         if time.time() - start>1:
-#             print("FPS: {}".format(frames))
-#             start = time.time()
-#             frames =0
-#
-#         k = cv2.waitKey(1)
-#         if k == 27:  # press ESC to exit
-#             cap.release()
-#             cv2.destroyAllWindows()
-#             break
+
 
