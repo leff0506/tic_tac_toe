@@ -1,0 +1,5 @@
+install anaconda
+conda create --name gputest
+conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
+pip install opencv-python
+pip install matplotlib

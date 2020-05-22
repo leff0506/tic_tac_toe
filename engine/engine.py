@@ -7,6 +7,7 @@ import math
 import random
 from engine.ai.ai import AI
 
+
 class Engine:
     def __init__(self):
         self.board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
@@ -22,6 +23,8 @@ class Engine:
         self.ai_moving = False
         self.ai_moving_barrel = 0
         self.reverse_drawing = False
+        self.draw_winner = False
+        self.last_first_move = 1
         file_names = ["1.png", "2.png", "3.png", "5.png"]
         for file in file_names:
             image = cv2.imread("./images/hands/" + file, cv2.IMREAD_UNCHANGED)
@@ -36,8 +39,10 @@ class Engine:
 
             self.bg_hand_images.append(blank_image)
         self.ai = AI()
+
     def set_reverse_drawing(self):
-        self.reverse_drawing= True
+        self.reverse_drawing = True
+        self.last_first_move = 2
 
     def get_canvas(self):
         canvas = np.zeros([db.WINDOW_HEIGHT, db.WINDOW_WIDTH, 4], dtype=np.uint8)
@@ -92,6 +97,7 @@ class Engine:
     def draw_board(self, canvas):
 
         for i in range(3):
+
             for j in range(3):
                 if self.reverse_drawing:
                     if self.board[i][j] == 1:
@@ -106,8 +112,10 @@ class Engine:
                         bottom_right = [center[0] + width / 2, center[1] + length / 2]
                         bottom_left = [center[0] - width / 2, center[1] + length / 2]
 
-                        left_rectangle = self.__rotate_rectangle([upper_left, upper_right, bottom_right, bottom_left], -45)
-                        right_rectangle = self.__rotate_rectangle([upper_left, upper_right, bottom_right, bottom_left], 45)
+                        left_rectangle = self.__rotate_rectangle([upper_left, upper_right, bottom_right, bottom_left],
+                                                                 -45)
+                        right_rectangle = self.__rotate_rectangle([upper_left, upper_right, bottom_right, bottom_left],
+                                                                  45)
                         points = np.array([left_rectangle, right_rectangle], dtype=np.int32)
                         cv2.fillPoly(canvas, points, db.PLAYER_COLORS[1])
                 else:
@@ -130,6 +138,45 @@ class Engine:
                     elif self.board[i][j] == 2:
                         cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 50, db.PLAYER_COLORS[0], 10)
                         # cv2.circle(canvas, (10 + j * 160 + 75, 10 + i * 160 + 75), 45, (0, 0, 0), -1)
+        if self.draw_winner:
+            self.__draw_winner_line(canvas)
+
+    def __draw_winner_line(self, canvas):
+        line_width = 10
+        for i in range(3):
+            won = True
+            for j in range(1, 3):
+                if self.board[i][j] != self.board[i][j - 1] or self.board[i][j] * self.board[i][j - 1] == 0:
+                    won = False
+            if won:
+                cv2.line(canvas, (40, (i) * 160 + 80 + line_width // 2), (445, (i) * 160 + 80 + line_width // 2),
+                         db.WINNER_LINE_COLOR, line_width)
+                return
+
+        for i in range(3):
+            won = True
+            for j in range(1, 3):
+                if self.board[j][i] != self.board[j - 1][i] or self.board[j][i] * self.board[j - 1][i] == 0:
+                    won = False
+            if won:
+                cv2.line(canvas, ((i) * 160 + 80 + line_width // 2, 40), ((i) * 160 + 80 + line_width // 2, 445),
+                         db.WINNER_LINE_COLOR, line_width)
+                return
+        won = True
+        for i in range(1, 3):
+            if self.board[i][i] != self.board[i - 1][i - 1]:
+                won = False
+        if won:
+            cv2.line(canvas, (40, 40), (450, 450), db.WINNER_LINE_COLOR, line_width)
+            return
+
+        won = True
+        for i in range(1, 3):
+            if self.board[i][2 - i] != self.board[i - 1][3 - i]:
+                won = False
+        if won:
+            cv2.line(canvas, (450, 40), (40, 450), db.WINNER_LINE_COLOR, line_width)
+            return
 
     def __draw_foreground_hands(self, canvas):
         start = copy.copy(db.START_POINT_FOR_HANDS)
@@ -169,23 +216,23 @@ class Engine:
         thickness = 2
         if self.current_step_row_col == 0:
 
-            cv2.putText(canvas, ">raw: {}".format(self.fixed_raw), (raw_point[0] - 24, raw_point[1]), font,
+            cv2.putText(canvas, ">row: {}".format(self.fixed_raw), (raw_point[0] - 24, raw_point[1]), font,
                         fontScale, color, thickness, cv2.LINE_AA)
             cv2.putText(canvas, "column: {}".format(self.fixed_col), col_point, font,
                         fontScale, color, thickness, cv2.LINE_AA)
         elif self.current_step_row_col == 1:
-            cv2.putText(canvas, "raw: {}".format(self.fixed_raw), raw_point, font,
+            cv2.putText(canvas, "row: {}".format(self.fixed_raw), raw_point, font,
                         fontScale, color, thickness, cv2.LINE_AA)
             cv2.putText(canvas, ">column: {}".format(self.fixed_col), (col_point[0] - 24, col_point[1]), font,
                         fontScale, color, thickness, cv2.LINE_AA)
-    def __update_ai_moving(self,delta):
-        delta/=db.AI_MOVES_SECONDS
+
+    def __update_ai_moving(self, delta):
+        delta /= db.AI_MOVES_SECONDS
         self.ai_moving_barrel += delta
-        if self.ai_moving_barrel >=1:
+        if self.ai_moving_barrel >= 1:
             self.ai_moving_barrel = 0
             self.ai_moving = False
             self.make_ai_move()
-
 
     def update_barrels(self, classes):
         cur_time = time.time()
@@ -193,15 +240,20 @@ class Engine:
         self.wait -= (cur_time - self.last_time)
         copy_delta = (cur_time - self.last_time)
         self.last_time = cur_time
-        if not self.alive :
-            return
-        if self.ai_moving:
-            self.__update_ai_moving(copy_delta)
-            return
         if self.wait <= 0:
             self.wait = 0
         else:
             return
+        if not self.alive:
+            if 3 in classes:
+                self.class_barrels[3] = min(1, self.class_barrels[3] + add)
+            else:
+                self.class_barrels[3] = max(0, self.class_barrels[3] - add)
+            return
+        if self.ai_moving:
+            self.__update_ai_moving(copy_delta)
+            return
+
 
         for i in range(4):
             if i in classes:
@@ -221,12 +273,11 @@ class Engine:
         move = self.ai.get_move(self.board, 2)
         self.board[move // 3][move % 3] = 2
 
-
     def make_ai_random_move(self):
         self.board[random.randint(0, 2)][random.randint(0, 2)] = 2
 
-    def __win_player(self,player):
-        #hor
+    def __win_player(self, player):
+        # hor
         for i in range(3):
             done = True
             for j in range(3):
@@ -247,25 +298,27 @@ class Engine:
         # main diag
         done = True
         for i in range(3):
-            if self.board[i][i]!=player:
+            if self.board[i][i] != player:
                 done = False
         if done:
             return True
         done = True
         for i in range(3):
-            if self.board[i][2-i] != player:
+            if self.board[i][2 - i] != player:
                 done = False
 
         if done:
             return True
         return False
+
     def __full_board(self):
         result = 0
         for i in range(3):
             for j in range(3):
-                if self.board[i][j] !=0:
-                    result +=1
+                if self.board[i][j] != 0:
+                    result += 1
         return result == 9
+
     def __win(self):
         if self.__win_player(1):
             return 1
@@ -274,44 +327,61 @@ class Engine:
         if self.__full_board():
             return -1
         return 0
+
     def update_moves(self):
-        if not self.alive or self.ai_moving:
+        if self.ai_moving:
             return
         if self.__win() != 0:
             self.alive = False
+            self.draw_winner = True
             ### here smth that win
-            return
 
-        for i in range(3):
-            if self.class_barrels[i] == 1:
-                for j in range(4):
-                    self.class_barrels[j] = 0
-                if self.current_step_row_col == 0:
-                    self.fixed_raw = i + 1
-                    self.current_step_row_col = 1
-                elif self.current_step_row_col == 1:
-                    self.fixed_col = i + 1
-                    self.current_step_row_col = 0
-                self.wait = db.SECONDS_WAIT_AFTER_FIX
-                return
+        if self.alive == True:
+            for i in range(3):
+                if self.class_barrels[i] == 1:
+                    for j in range(4):
+                        self.class_barrels[j] = 0
+                    if self.current_step_row_col == 0:
+                        self.fixed_raw = i + 1
+                        self.current_step_row_col = 1
+                    elif self.current_step_row_col == 1:
+                        self.fixed_col = i + 1
+                        self.current_step_row_col = 0
+                    self.wait = db.SECONDS_WAIT_AFTER_FIX
+                    return
         if self.class_barrels[3] == 1:
             for j in range(4):
                 self.class_barrels[j] = 0
+            if self.alive == False:
+                for i in range(3):
+                    for j in range(3):
+                        self.board[i][j] = 0
+                self.alive = True
+                self.draw_winner = False
+                if self.last_first_move == 1:
+                    self.make_ai_random_move()
+                    self.reverse_drawing = True
+                else:
+                    self.reverse_drawing = False
+
+                self.last_first_move = 3 -self.last_first_move
+                self.wait = 1
+                return
             self.wait = db.SECONDS_WAIT_AFTER_FIX
             # here some checks
             # equals 0
             if self.fixed_raw * self.fixed_col == 0:
                 return
             # empty or full
-            if self.board[self.fixed_raw-1][self.fixed_col-1] != 0:
+            if self.board[self.fixed_raw - 1][self.fixed_col - 1] != 0:
                 return
 
             self.__make_player_move(self.fixed_raw, self.fixed_col)
-            if self.__win()!=0:
+            if self.__win() != 0:
                 self.alive = False
-                ### here smth that win
+                self.draw_winner = True
+                self.wait = 1
                 return
             self.fixed_raw = 0
             self.fixed_col = 0
-            self.ai_moving=True
-
+            self.ai_moving = True

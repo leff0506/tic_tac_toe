@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
 import cv2 
-import matplotlib.pyplot as plt
 from tools.finger_detection.util import count_parameters as count
 from tools.finger_detection.util import convert2cpu as cpu
 from tools.finger_detection.util import predict_transform

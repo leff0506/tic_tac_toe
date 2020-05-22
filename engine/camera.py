@@ -1,5 +1,8 @@
 import cv2
 import tools.DB as db
+import urllib.request
+import numpy as np
+
 class Camera:
     def __init__(self,source = 0):
         self.capture = cv2.VideoCapture(source)
@@ -11,6 +14,9 @@ class Camera:
 
             return ret,frame
         else:
-            return ret, frame,[]
+            return ret,[]
+    def isOpened(self):
+        return self.capture.isOpened()
+
     def release(self):
         self.capture.release()

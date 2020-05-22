@@ -5,11 +5,6 @@ from tools.finger_detection.finger_detection import Predictor
 import tools.DB as db
 import time
 from engine.engine import Engine
-# initialize the list of reference points and boolean indicating
-# whether cropping is being performed or not
-refPt = []
-
-
 
 
 
@@ -21,7 +16,7 @@ if random.randint(0,1)  == 1:
     game_engine.make_ai_random_move()
     game_engine.set_reverse_drawing()
 
-while camera.capture.isOpened():
+while camera.isOpened():
     ret, frame = camera.get_frame()
     if ret:
         prediction = predictor.predict_draw(frame)
