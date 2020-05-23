@@ -26,7 +26,7 @@ The task is divided into two stages.
 </ol>
 Second step is casual so only first stage deserves our attention.
 After several days of googling I found two solutions.
-oul>
+<ol>
   <li>Algorithm based on skin selection by hsv range of skin color. After selection we can find contours. Based on the contours, you can say how many fingers a person shows.</li>
   <li>This algorithm differs from the previous one in that the hand selection is not based on color but on the background selection.</li>
 </ol>
