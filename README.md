@@ -3,7 +3,7 @@ This PC Windows 10 game is based on gesture recognition. Any interaction with th
 
 ## How to run.
 <ol>
-  <li><a href = "https://www.anaconda.com/products/individual">download the Anaconda</a> be shure you update PATH variable (checkbox)</li>
+  <li><a href = "https://www.anaconda.com/products/individual">download the Anaconda</a> be sure you update PATH variable (checkbox) and install it for one user (to avoid some unexpectable results)</li>
   <li>run <code>cmd</code> and create new environment <code>conda create --name tic_tac_toe</code></li>
   <li>activate environment <code>conda activate tic_tac_toe</code></li>
   <li>download libraries for interraction with GPU <code>conda install pytorch torchvision cudatoolkit=10.1 -c pytorch</code></li>
